@@ -41,8 +41,7 @@ public class GameManager : MonoBehaviour {
     public delegate void UpdateUI(int score,int skillTimes,float capacity);
     public static event UpdateUI UpdateUIHandler;
 
-    public delegate void MGameOver();
-    public static event MGameOver MGameOverHandler;
+
 
     //GameObject[] webNode = GameObject.FindGameObjectsWithTag("WebNode");
     
@@ -56,14 +55,11 @@ public class GameManager : MonoBehaviour {
     void Initialize()
     {
         Screen.SetResolution(1080,1920,false);
-        
         _score = 0;
         _inSkill = false;
         _curCapacity = 0;
         _skillTimes = maxSkillTimes;
-
-
-
+ 
         Fish.AddScoreHandler += AddScore;
         Obstacle.GameOverHandler += GameOver;
         Wharf.DockHandler += Dock;
@@ -72,11 +68,8 @@ public class GameManager : MonoBehaviour {
         webRopeMat = Resources.Load<Material>("Materials/WebRope");
 
         ChangeWebMatColor(WebColor);
-
         ResetCollisionMatrix();
-     
     }
-
 
     private void ResetCollisionMatrix()
     {
@@ -121,7 +114,6 @@ public class GameManager : MonoBehaviour {
             SetWebNodeForge(forge);
     }
 
-
     // Update is called once per frame
     void Update () {
         
@@ -143,10 +135,19 @@ public class GameManager : MonoBehaviour {
         UpdateUIHandler(_score, _skillTimes, _curCapacity / _maxCapacity);
     }
 
-    private void GameOver() {
-        MGameOverHandler();
-        //Destroy(Player);
-        Debug.Log("GAMEOVER");
+    private void GameOver(int i) {
+
+        //GameObject.Find("PlayerL").GetComponent<Animator>().SetInteger("GameOver", i);
+        GameObject.Find("PlayerR").GetComponent<Animator>().SetInteger("GameOver", i);
+        DisableCollision("Fish", "WebNode", true);
+        if (i == 0) {        
+            DisableCollision("Rock", "WebNode", true);
+        }
+        if (i == 1) {
+            SetWebNodeForge(100f);
+        }
+            
+        Debug.Log("GAMEOVER" + i);
     }
 
 

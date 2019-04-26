@@ -22,7 +22,8 @@ public class PlayerMovement : MonoBehaviour
 
     public delegate void SkillInput();
     public static event SkillInput SkillInputHandler;
-
+    Animator anim_L;
+    Animator anim_R;
     [SerializeField]
     Transform PlayerModel_L;
     [SerializeField]
@@ -47,19 +48,42 @@ public class PlayerMovement : MonoBehaviour
 	{
         FixPlayerModelPosition();
 #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
-        if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.UpArrow)&&!killMovement)
+
+        if ((((int)Input.GetAxis("JoyStick1RPad") == -1 && (int)Input.GetAxis("JoyStick2RPad") == -1)||Input.GetKey(KeyCode.Q))&&!killMovement)
         {
+            
             skillInput = true;
             SkillInputHandler();
         }
         else
             skillInput = false;
 
+       // anim_L.SetBool("Skill", skillInput);
+        anim_R.SetBool("Skill", skillInput);
 
-        
-        float moveHorizontalL = killMovement ? 0: Input.GetAxis("HorizontalL");
-        float moveHorizontalR = killMovement ? 0: Input.GetAxis("HorizontalR");
-
+        string[] joyStickNames = Input.GetJoystickNames();
+        /*
+        for (int x = 0; x < joyStickNames.Length; x++)
+        {
+            print(x + joyStickNames[x]);
+        }*/
+        float moveHorizontalL = 0;
+        float moveHorizontalR = 0;
+        if (joyStickNames.Length == 0)
+        {
+            moveHorizontalL = killMovement ? 0 : Input.GetAxis("HorizontalL");
+            moveHorizontalR = killMovement ? 0 : Input.GetAxis("HorizontalR");
+        }
+        else if (joyStickNames.Length == 1) {
+            moveHorizontalL = killMovement ? 0 : Input.GetAxis("JoyStick1LPad");
+            moveHorizontalR = killMovement ? 0 : Input.GetAxis("HorizontalR");
+        }
+        else if (joyStickNames.Length >= 2) {
+            moveHorizontalL = killMovement ? 0 : Input.GetAxis("JoyStick1LPad");
+            moveHorizontalR = killMovement ? 0 : Input.GetAxis("JoyStick2LPad");
+        }
+        //anim_L.SetInteger("Input", (int)moveHorizontalL);
+        anim_R.SetInteger("Input", (int)moveHorizontalR);
         Vector3 movementL = new Vector3(moveHorizontalL, 0.0f, 0.0f);
         Vector3 movementR = new Vector3(moveHorizontalR, 0.0f, 0.0f);
 
@@ -105,23 +129,26 @@ public class PlayerMovement : MonoBehaviour
 
        // Web.transform.rotation = Quaternion.Euler(60.0f, 0.0f, 0.0f);
         Web.transform.position =  new Vector3((WebPole_R.position.x + WebPole_L.position.x) / 2,Web.transform.position.y,Web.transform.position.z);
-        Web.transform.localScale = new Vector3((WebPole_R.position - WebPole_L.position).x-1.5f,9f,1.5f);
+        
         dis = WebPole_R.position.x - WebPole_L.position.x;
+        Web.transform.localScale = new Vector3(Mathf.Abs(dis), 9f, 1.5f);
     }
 
-    void KillMovement() {
+    void KillMovement(int i) {
         killMovement = true;
     }
 
 
     private void Awake()
     {
-        GameManager.MGameOverHandler += KillMovement;
+        Obstacle.GameOverHandler += KillMovement;
+        anim_L = PlayerModel_L.GetComponent<Animator>();
+        anim_R = PlayerModel_R.GetComponent<Animator>();
     }
 
     private void OnDestroy()
     {
-        GameManager.MGameOverHandler -= KillMovement;
+        Obstacle.GameOverHandler -= KillMovement;
     }
 
     void Start ()
